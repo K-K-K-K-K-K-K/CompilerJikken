@@ -55,7 +55,7 @@ typedef struct {
 	char Operand1[STRINGSTACK_STR_SIZE];
 	char Operand2[STRINGSTACK_STR_SIZE];
 	char Variable[STRINGSTACK_STR_SIZE];
-} ThreeStateUnit;
+} ThreeAddressUnit;
 
 // コンパイル: gcc Compiler.c StringStack.c -o Compiler
 void main() {
@@ -138,7 +138,7 @@ void main() {
 	printf("\n\n");
 	// ----------------------------------------------------------------
 	
-	ThreeStateUnit pool[STRINGSTACK_SIZE_MAX]; // 大きさに意味無し
+	ThreeAddressUnit pool[STRINGSTACK_SIZE_MAX]; // 大きさに意味無し
 	int poolIdx = 0;
 
 	// 三番地コード生成並出力 -----------------------------------------
@@ -173,18 +173,17 @@ void main() {
 	// 仮想CPU用機械語列生成並出力 ------------------------------------
 	printf("< 仮想CPU用機械語列 >\n");
 
-	char tmp[3] = "";
+	bool stf = false;
+	char sta[STRINGSTACK_STR_SIZE];
 	for (int i = 0; i < poolIdx; i++) {
-		if (!strcmp(tmp, pool[poolIdx].Operand1) && !strcmp(tmp, pool[poolIdx].Operand2)) {
-			if (i != 0)
-				printf("ST %s\n", tmp);
+		if (strcmp(pool[i - 1].Variable, pool[i].Operand1))
 			printf("LD %s\n", pool[i].Operand1);
-		}
+
 		switch (pool[i].Operator[0]) {
 			case '+':
 				printf("AD %s\n", pool[i].Operand2);
 				break;
-
+	
 			case '-':
 				printf("SB %s\n", pool[i].Operand2);
 				break;
@@ -192,14 +191,14 @@ void main() {
 			case '*':
 				printf("ML %s\n", pool[i].Operand2);
 				break;
-
+	
 			case '/':
 				printf("DV %s\n", pool[i].Operand2);
 				break;
 		}
-		sprintf(tmp, "%s", pool[i].Variable);
-		if (i == poolIdx - 1)
-			printf("ST %s\n", tmp);
+		if (i != poolIdx - 1 && !strcmp(pool[i].Variable, pool[i + 1].Operand1))
+				continue;
+		printf("ST %s\n", pool[i].Variable);
 	}	
 	// ----------------------------------------------------------------
 
